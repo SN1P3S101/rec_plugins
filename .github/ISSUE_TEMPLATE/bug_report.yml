@@ -1,8 +1,8 @@
 name: Bug Report
-about: Report something that isn’t working as expected
-title: ""
+description: Report something that isn’t working as expected
+title: "Bug: "
 labels: ["bug"]
-assignees: ""
+assignees: []
 body:
   - type: markdown
     attributes:
@@ -15,7 +15,7 @@ body:
     attributes:
       label: Short summary
       description: A clear one-line title for the issue
-      placeholder: 'Example: "rec_config not reloading after save"'
+      placeholder: 'Example: rec_config not reloading after save'
     validations:
       required: true
 
