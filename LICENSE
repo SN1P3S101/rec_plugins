@@ -1,0 +1,29 @@
+Recaris Gaming Plugins — Proprietary License  
+Version 1.0 — September 2025  
+https://recaris.eu  
+
+Copyright (c) 2025 Recaris Gaming. All rights reserved.
+
+---
+
+Permissions (what you MAY do):
+- View and study the source code for educational purposes.
+- Use the code as a reference to create new, original plugins that interact with the provided public hooks and APIs.
+- Use the plugins in local or private test environments, without public access or monetization.
+
+Restrictions (what you may NOT do):
+- Use the plugins in any live or commercial environment (including servers where revenue is generated) without a valid purchase from the Recaris Gaming webstore: https://recaris.eu.
+- Redistribute, republish, or share the plugin source code or binaries, in part or in whole, without written permission.
+- Modify and redistribute the plugin source code as your own project.
+- Remove or alter any copyright, license, or attribution notices.
+
+Commercial Use:
+- A separate commercial license is required for the use of these plugins in live or monetized servers.
+- Such licenses are exclusively available through the Recaris Gaming webstore: https://recaris.eu.
+
+Liability:
+This software is provided "as is", without warranty of any kind.  
+Recaris Gaming is not liable for any damages, losses, or issues arising from the use of this software.
+
+Agreement:
+By accessing, forking, or using this repository, you agree to the terms outlined in this license.

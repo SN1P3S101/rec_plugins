@@ -1,0 +1,114 @@
+name: Bug Report
+about: Report something that isn’t working as expected
+title: ""
+labels: ["bug"]
+assignees: ""
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for reporting a bug!
+        Please provide as much detail as possible so we can reproduce and fix the issue quickly.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Short summary
+      description: A clear one-line title for the issue
+      placeholder: Example: "rec_config not reloading after save"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Affected plugin
+      description: Which plugin does this bug relate to?
+      options:
+        - rec_config
+        - rec_database
+        - rec_core
+        - rec_ui
+        - rec_messages
+        - rec_ranks
+        - rec_tags
+        - rec_permissions
+        - rec_events
+        - rec_admin
+        - rec_protection
+        - rec_checker
+        - rec_gather
+        - rec_stacker
+        - rec_shop
+        - rec_economy
+        - rec_status
+        - rec_discord
+        - rec_scheduler
+        - rec_cache
+        - rec_api
+        - rec_localization
+        - not sure / multiple / other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      description: Exact plugin version (e.g., v0.1.0). If unknown, type "unknown".
+      placeholder: v0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Carbon version and Rust server build (e.g., Carbon 2.0.203, Rust build 1234).
+      placeholder: Carbon 2.0.203, Rust build ####
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Clear description of the bug.
+      placeholder: Describe the unexpected behavior…
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide a minimal, reproducible set of steps.
+      placeholder: |
+        1. Do X
+        2. Then Y
+        3. Observe Z
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste relevant server logs or attach screenshots.
+      render: shell
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have searched existing issues for duplicates.
+          required: true
