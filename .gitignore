@@ -2,7 +2,9 @@
 
 !.gitignore
 !README.md
-!LCENSE
+!LICENSE
 !.github/
 
+!carbon/
 !carbon/plugins/
+!carbon/plugins/**
