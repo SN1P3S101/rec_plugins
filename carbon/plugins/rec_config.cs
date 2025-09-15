@@ -260,13 +260,23 @@ namespace Carbon.Plugins {
 
             schema = new Dictionary<string, Dictionary<string, object>> {
 
-                {"rec_main", new Dictionary<string, object> {
+                {"rec_core", new Dictionary<string, object> {
+
+                    {"server_id",
+                    new schema_item(
+                        "myserver",
+                        true,
+                        "Important! Unique server identifier.",
+                        "This should be a short string without spaces or special characters. This ID is used to uniquely identify your server in the database and must be unique in your network of servers. \nChanging this value after initial setup will cause your server to be treated as a new server, losing access to existing data.\n\nThis value is required and will be linked to all of your players data and all stats connected to it. Including ranks, tags, playtime, bans and more. Choose wisely.\n\nIf you are running a single server, you can leave this as the default value.\n\nIf you are running multiple servers, ensure each has a unique ID.\nOfcource you can keep the default value if you have multiple servers AND if you have multiple databases. We made it this way to give this eco system a more dynamic, flexible, modular and most importantly, a more CONNECTED approach.\n\nIf you are a server owner or developer you can use this data to make websites, leaderboards, stat trackers and more. The possibilities are endless.\n\nEach plugin will use this value to link data to your server. For example; if you have two servers running with the same server_id, they will share the same player data (this can be used to have one big leaderbord that also shows people from yout other servers). If you have two servers with different server_id values, they will have separate player data (this can be used to have completely separate servers with their own stats, leaderboards, etc). But this will most times be the default because most providers will give you a new database access for each server.\n\nSo beware when changing this value after initial setup. It will cause your server to be treated as a new server, losing access to existing data!",
+                        typeof(string)
+                    )},
 
                     {"link_website",
                     new schema_item(
                         "https://recaris.eu",
                         false,
                         "Website URL",
+                        "This is the URL to your server's website. It will be used in various places, such as in chat commands or web interfaces, to provide players with a link to your website.\n\nMake sure to include the full URL, including the 'http://' or 'https://' prefix.",
                         typeof(string)
                     )},
 
@@ -275,6 +285,7 @@ namespace Carbon.Plugins {
                         "https://discord.gg/fDAjtATuma",
                         false,
                         "Discord Invite Link",
+                        "This is the invite link to your server's Discord. It will be used in various places, such as in chat commands or web interfaces, to provide players with a link to your Discord server.\n\nMake sure to use a valid invite link.",
                         typeof(string)
                     )},
 
@@ -283,6 +294,7 @@ namespace Carbon.Plugins {
                         "https://recaris.eu",
                         false,
                         "Shop URL",
+                        "This is the URL to your server's shop. It will be used in various places, such as in chat commands or web interfaces, to provide players with a link to your shop.\n\nMake sure to include the full URL, including the 'http://' or 'https://' prefix.",
                         typeof(string)
                     )},
 
@@ -291,14 +303,26 @@ namespace Carbon.Plugins {
                         "Recaris Gaming",
                         true,
                         "Server Name",
+                        "The name of your server. This will be used in various places, such as in chat commands or web interfaces, to identify your server.",
                         typeof(string)
                     )},
+
+                    {"server_tag",
+                    new schema_item(
+                        "[REC]",
+                        false,
+                        "Server Tag for chat",
+                        "This tag will be prefixed to all chat messages sent by the plugin. It should be short and easily recognizable, as it will help players identify messages from the server in the chat.\n\nExample: [REC] Welcome to the server!",
+                        typeof(string)
+                    )},
+                        
 
                     {"style_primary_color",
                     new schema_item(
                         "#ff952a",
                         true,
                         "Primary Style Color",
+                        "The primary color used in different kinds of elements. This should be a valid hex color code (e.g., #ff952a).",
                         typeof(string)
                     )},
 
@@ -307,6 +331,7 @@ namespace Carbon.Plugins {
                         "#72ffba",
                         true,
                         "Secondary Style Color",
+                        "The secondary color used in different kinds of elements. This should be a valid hex color code (e.g., #72ffba).",
                         typeof(string)
                     )},
 
@@ -315,10 +340,62 @@ namespace Carbon.Plugins {
                         "76561199855661809",
                         false,
                         "Steam ID for icon in chat",
+                        "This is the Steam ID of the account whose avatar will be used as the icon in chat messages sent by the plugin. It should be a valid Steam ID (e.g., 76561199855661809).\n\nThis is optional, but recommended to give your server a more personalized touch. Also default system messages will use this icon and your server_tag as the prefix. Example: [image] [<server_tag>] This is a system message.",
                         typeof(string)
                     )}
 
-                }}
+                }},
+
+                {"rec_database", new Dictionary<string, object> {
+
+                    // hostname, port, database, username, password
+
+                    {"hostname",
+                    new schema_item(
+                        "localhost",
+                        true,
+                        "Database Hostname",
+                        "The hostname or IP address of your MySQL database server.",
+                        typeof(string)
+                    )},
+
+                    {"port",
+                    new schema_item(
+                        3306,
+                        true,
+                        "Database Port",
+                        "The port number on which your MySQL database server is listening.",
+                        typeof(int)
+                    )},
+
+                    {"database",
+                    new schema_item(
+                        "recaris_rust",
+                        true,
+                        "Database Name",
+                        "The name of the MySQL database to use for storing server data.",
+                        typeof(string)
+                    )},
+
+                    {"username",
+                    new schema_item(
+                        "recaris_rust",
+                        true,
+                        "Database Username",
+                        "The username to use when connecting to your MySQL database.",
+                        typeof(string)
+                    )},
+
+                    {"password",
+                    new schema_item(
+                        "<changeme>",
+                        true,
+                        "Database Password",
+                        "The password to use when connecting to your MySQL database.",
+                        typeof(string)
+                    )}
+
+                }},
 
             };
 
@@ -583,10 +660,11 @@ namespace Carbon.Plugins {
 
 
         //! utilities
-        private class schema_item(object default_value, bool required, string description, Type type) {
+        private class schema_item(object default_value, bool required, string about, string description, Type type) {
 
             public object default_value = default_value;
             public bool required = required;
+            public string about = about;
             public string description = description;
             public Type type = type;
 
@@ -606,9 +684,45 @@ namespace Carbon.Plugins {
 
             }
 
+            if (type == typeof(bool)) {
+
+                return value is bool;
+
+            }
+
             if (type == typeof(int)) {
 
-                return value is int;
+                if (value is int) {
+
+                    return true;
+
+                }
+
+                if (value is long l) {
+
+                    return l >= int.MinValue && l <= int.MaxValue;
+
+                }
+
+                if (value is double dd) {
+
+                    return dd % 1 == 0 && dd >= int.MinValue && dd <= int.MaxValue;
+
+                }
+
+                if (value is float ff) {
+
+                    return ff % 1 == 0 && ff >= int.MinValue && ff <= int.MaxValue;
+
+                }
+
+                if (value is decimal dc) {
+
+                    return dc % 1 == 0 && dc >= int.MinValue && dc <= int.MaxValue;
+
+                }
+
+                return false;
 
             }
 
@@ -627,12 +741,6 @@ namespace Carbon.Plugins {
             if (type == typeof(double)) {
 
                 return value is double || value is float || value is int || value is long || value is decimal;
-
-            }
-
-            if (type == typeof(bool)) {
-
-                return value is bool;
 
             }
 
