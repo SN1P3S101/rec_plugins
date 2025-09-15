@@ -185,71 +185,9 @@ namespace Carbon.Plugins {
 
             }
 
+            log("DEBUG", "Exported config sections: " + string.Join(", ", seen));
+
             return export;
-
-        }
-
-
-
-        //! commands
-        [ConsoleCommand("rec_config_status")]
-        private void cmd_rec_config_status(ConsoleSystem.Arg arg) {
-
-            if (arg.Connection != null) {
-
-                return;
-
-            }
-
-            if (arg.Args != null && arg.Args.Length > 0) {
-
-                log("WARN", "This command takes no arguments.");
-
-                return;
-
-            }
-
-            log("INFO", "Configuration Plugin Status:");
-            log("INFO", "Config exists: " + (Config.Exists() ? "Yes" : "No"));
-            log("INFO", "Config verified: " + (config_verify().status == "OK" ? "Yes" : "No"));
-            log("INFO", "");
-            log("INFO", "Available sections:");
-
-            foreach (var section in schema) {
-
-                log("INFO", "- " + section.Key);
-
-                foreach (var item in section.Value) {
-                    
-                    if (item.Value is not schema_item s_item) {
-
-                        log("INFO", "  - " + item.Key + " (unknown)");
-
-                        continue;
-
-                    }
-
-                    var line = "  - " + item.Key + " (" + s_item.type.Name + ")";
-
-                    if (s_item.required) {
-
-                        line += " [REQUIRED]";
-
-                    }
-
-                    if (!string.IsNullOrEmpty(s_item.description)) {
-
-                        line += " - " + s_item.description;
-
-                    }
-
-                    log("INFO", line);
-
-                }
-
-            }
-
-            log("INFO", "");
 
         }
 
