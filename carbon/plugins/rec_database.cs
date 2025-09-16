@@ -86,8 +86,6 @@ namespace Carbon.Plugins {
 
             if (verify.status == "FIXED") {
 
-                log("INFO", "DB updated to match schema: " + verify.message);
-
             } else if (verify.status != "OK") {
 
                 log("ERROR", "DB verify failed: " + verify.message);
