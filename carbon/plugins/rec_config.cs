@@ -630,60 +630,36 @@ namespace Carbon.Plugins {
 
             if (type == typeof(int)) {
 
-                if (value is int) {
-
-                    return true;
-
-                }
-
-                if (value is long l) {
-
-                    return l >= int.MinValue && l <= int.MaxValue;
-
-                }
-
-                if (value is double dd) {
-
-                    return dd % 1 == 0 && dd >= int.MinValue && dd <= int.MaxValue;
-
-                }
-
-                if (value is float ff) {
-
-                    return ff % 1 == 0 && ff >= int.MinValue && ff <= int.MaxValue;
-
-                }
-
-                if (value is decimal dc) {
-
-                    return dc % 1 == 0 && dc >= int.MinValue && dc <= int.MaxValue;
-
-                }
-
-                return false;
+                return value is int;
 
             }
 
             if (type == typeof(long)) {
 
-                return value is long || value is int;
+                return value is long;
 
             }
 
             if (type == typeof(float)) {
 
-                return value is float || value is double || value is int || value is long || value is decimal;
+                return value is float;
 
             }
 
             if (type == typeof(double)) {
 
-                return value is double || value is float || value is int || value is long || value is decimal;
+                return value is double;
+
+            }
+
+            if (type == typeof(decimal)) {
+
+                return value is decimal;
 
             }
 
             return string.Equals(value.GetType().FullName, type.FullName, StringComparison.OrdinalIgnoreCase);
-
+            
         }
 
         private bool try_convert_value(object input, Type target_type, out object output) {
