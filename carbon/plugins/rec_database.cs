@@ -490,7 +490,6 @@ namespace Carbon.Plugins {
 
             } catch { }
 
-            // connection is not open/working/closed so we create a new one!
             database = null;
 
             var hostname = (string)config["rec_database"]["hostname"];
@@ -665,11 +664,12 @@ namespace Carbon.Plugins {
                 var notes = new List<string>();
                 var pending_fks = new List<(string table, string fk)>();
 
-                foreach (var kv in schema) {
+                var order = topo_table_order(schema);
 
-                    var table = kv.Key;
-                    var cols = kv.Value.columns;
-                    var keys = kv.Value.fks;
+                foreach (var table in order) {
+
+                    var cols = schema[table].columns;
+                    var keys = schema[table].fks;
                     bool exists;
 
                     using (var cmd = database!.CreateCommand()) {
@@ -700,9 +700,7 @@ namespace Carbon.Plugins {
 
                                     pending_fks.Add((table, k));
 
-                                }
-
-                                else {
+                                } else {
 
                                     parts.Add(k);
 
@@ -714,9 +712,71 @@ namespace Carbon.Plugins {
 
                         var sql = "CREATE TABLE `" + table + "` (" + string.Join(", ", parts.ToArray()) + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
 
-                        using (var cmd = database.CreateCommand()) {
+                        try {
 
+                            using var cmd = database.CreateCommand();
                             cmd.CommandText = sql; cmd.ExecuteNonQuery();
+
+                        } catch (Exception e) {
+
+                            var msg = (e.Message ?? "").ToLowerInvariant();
+
+                            if (msg.Contains("errno: 150") || msg.Contains("foreign key constraint")) {
+
+                                var drops = new List<(string child, string constraint)>();
+
+                                using (var cmd = database.CreateCommand()) {
+
+                                    cmd.CommandText =
+                                        "SELECT CONSTRAINT_NAME, TABLE_NAME " +
+                                        "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS " +
+                                        "WHERE CONSTRAINT_SCHEMA = @db AND REFERENCED_TABLE_NAME = @parent";
+                                    cmd.Parameters.AddWithValue("@db", database.Database);
+                                    cmd.Parameters.AddWithValue("@parent", table);
+
+                                    using var r = cmd.ExecuteReader();
+                                    
+                                    while (r.Read()) {
+
+                                        var cname = r.GetString(0);
+                                        var child = r.GetString(1);
+
+                                        drops.Add((child, cname));
+
+                                    }
+
+                                }
+
+                                foreach (var (child, constraint) in drops) {
+
+                                    using var cmd = database.CreateCommand();
+                                    cmd.CommandText = "ALTER TABLE `" + child + "` DROP FOREIGN KEY `" + constraint + "`;";
+
+                                    try {
+
+                                        cmd.ExecuteNonQuery();
+
+                                        log("WARN", "dropped FK \"" + constraint + "\" on \"" + child + "\" (parent \"" + table + "\" missing).");
+
+                                        changed = true;
+
+                                        notes.Add("dropped FK \"" + constraint + "\" on \"" + child + "\"");
+
+                                    } catch { }
+
+                                }
+
+                                using (var cmd = database.CreateCommand()) {
+
+                                    cmd.CommandText = sql; cmd.ExecuteNonQuery();
+
+                                }
+
+                            } else {
+
+                                throw;
+
+                            }
 
                         }
 
@@ -741,20 +801,18 @@ namespace Carbon.Plugins {
                         cmd.Parameters.AddWithValue("@db", database.Database);
                         cmd.Parameters.AddWithValue("@tab", table);
 
-                        using (var r = cmd.ExecuteReader()) {
+                        using var r = cmd.ExecuteReader();
+                        
+                        while (r.Read()) {
 
-                            while (r.Read()) {
+                            var n = r.GetString(0);
+                            var t = r.GetString(1);
+                            var nul = r.GetString(2);
+                            var key = r.IsDBNull(3) ? "" : r.GetString(3);
+                            var ex = r.IsDBNull(4) ? "" : r.GetString(4);
+                            var defv = r.IsDBNull(5) ? "" : r.GetString(5);
 
-                                var n = r.GetString(0);
-                                var t = r.GetString(1);
-                                var nul = r.GetString(2);
-                                var key = r.IsDBNull(3) ? "" : r.GetString(3);
-                                var ex = r.IsDBNull(4) ? "" : r.GetString(4);
-                                var defv = r.IsDBNull(5) ? "" : r.GetString(5);
-
-                                existing_cols[n] = (t, nul, key, ex, defv);
-
-                            }
+                            existing_cols[n] = (t, nul, key, ex, defv);
 
                         }
 
@@ -786,28 +844,25 @@ namespace Carbon.Plugins {
 
                             if (needs_modify(ex, def)) {
 
-                                using (var cmd = database.CreateCommand()) {
+                                using var cmd = database.CreateCommand();
+                                cmd.CommandText = "ALTER TABLE `" + table + "` MODIFY COLUMN `" + col + "` " + def + ";";
 
-                                    cmd.CommandText = "ALTER TABLE `" + table + "` MODIFY COLUMN `" + col + "` " + def + ";";
+                                try {
 
-                                    try {
+                                    cmd.ExecuteNonQuery();
 
-                                        cmd.ExecuteNonQuery();
+                                    log("INFO", "modified column \"" + table + "\".\"" + col + "\".");
 
-                                        log("INFO", "modified column \"" + table + "\".\"" + col + "\".");
+                                    changed = true;
 
-                                        changed = true;
+                                    notes.Add("modified column \"" + table + "\".\"" + col + "\"");
 
-                                        notes.Add("modified column \"" + table + "\".\"" + col + "\"");
-
-                                    } catch { }
-
-                                }
+                                } catch { }
 
                             }
 
                         }
-                        
+
                     }
 
                     if (keys != null) {
@@ -822,23 +877,21 @@ namespace Carbon.Plugins {
 
                             }
 
-                            using (var cmd = database.CreateCommand()) {
+                            using var cmd = database.CreateCommand();
 
-                                cmd.CommandText = "ALTER TABLE `" + table + "` ADD " + raw + ";";
+                            cmd.CommandText = "ALTER TABLE `" + table + "` ADD " + raw + ";";
 
-                                try {
+                            try {
 
-                                    cmd.ExecuteNonQuery();
+                                cmd.ExecuteNonQuery();
 
-                                    log("INFO", "added key on \"" + table + "\": " + raw + ".");
+                                log("INFO", "added key on \"" + table + "\": " + raw + ".");
 
-                                    changed = true;
+                                changed = true;
 
-                                    notes.Add("added key on \"" + table + "\": " + raw);
+                                notes.Add("added key on \"" + table + "\": " + raw);
 
-                                } catch { }
-
-                            }
+                            } catch { }
 
                         }
 
@@ -846,25 +899,23 @@ namespace Carbon.Plugins {
 
                 }
 
-                foreach (var entry in pending_fks) {
+                foreach (var (table, fk) in pending_fks) {
 
-                    using (var cmd = database!.CreateCommand()) {
+                    using var cmd = database!.CreateCommand();
 
-                        cmd.CommandText = "ALTER TABLE `" + entry.table + "` ADD " + entry.fk + ";";
+                    cmd.CommandText = "ALTER TABLE `" + table + "` ADD " + fk + ";";
 
-                        try {
+                    try {
 
-                            cmd.ExecuteNonQuery();
+                        cmd.ExecuteNonQuery();
 
-                            log("INFO", "added FK on \"" + entry.table + "\": " + entry.fk + ".");
+                        log("INFO", "added FK on \"" + table + "\": " + fk + ".");
 
-                            changed = true;
+                        changed = true;
 
-                            notes.Add("added FK on \"" + entry.table + "\": " + entry.fk);
+                        notes.Add("added FK on \"" + table + "\": " + fk);
 
-                        } catch { }
-
-                    }
+                    } catch { }
 
                 }
 
@@ -888,7 +939,10 @@ namespace Carbon.Plugins {
 
                 log("ERROR", "Verify exception: " + e.Message);
 
-                return (status: "ERROR", message: "Verify exception: " + e.Message);
+                return (
+                    status: "ERROR",
+                    message: "Verify exception: " + e.Message
+                );
 
             }
 
@@ -1037,7 +1091,226 @@ namespace Carbon.Plugins {
             }
 
             return false;
-            
+
+        }
+
+        private string fk_parent_table(string fkDef) {
+
+            var s = fkDef ?? "";
+            var i = s.IndexOf("REFERENCES", StringComparison.OrdinalIgnoreCase);
+
+            if (i < 0) {
+
+                return "";
+
+            }
+
+            i += "REFERENCES".Length;
+
+            while (i < s.Length && char.IsWhiteSpace(s[i])) {
+
+                i++;
+
+            }
+
+            if (i >= s.Length) {
+
+                return "";
+
+            }
+
+            string readIdent(ref int idx) {
+
+                if (idx >= s.Length) {
+
+                    return "";
+
+                }
+
+                if (s[idx] == '`') {
+
+                    var j = s.IndexOf('`', idx + 1);
+
+                    if (j <= idx) {
+
+                        return "";
+
+                    }
+
+                    var val = s.Substring(idx + 1, j - idx - 1);
+
+                    idx = j + 1;
+
+                    return val;
+
+                } else {
+
+                    var j = idx;
+
+                    while (j < s.Length && s[j] != '(' && s[j] != '.' && !char.IsWhiteSpace(s[j])) {
+
+                        j++;
+
+                    }
+
+                    var val = s.Substring(idx, j - idx).Trim();
+
+                    idx = j;
+
+                    return val;
+
+                }
+
+            }
+
+            var pos = i;
+            var first = readIdent(ref pos);
+
+            if (string.IsNullOrEmpty(first)) {
+
+                return "";
+
+            }
+
+            while (pos < s.Length && char.IsWhiteSpace(s[pos])) {
+
+                pos++;
+
+            }
+
+            if (pos < s.Length && s[pos] == '.') {
+
+                pos++;
+
+                while (pos < s.Length && char.IsWhiteSpace(s[pos])) {
+
+                    pos++;
+
+                }
+
+                var second = readIdent(ref pos);
+
+                if (!string.IsNullOrEmpty(second)) {
+
+                    return second;
+
+                }
+
+            }
+
+            return first;
+
+        }
+
+        private List<string> topo_table_order(Dictionary<string, (Dictionary<string, string> columns, List<string> fks)> schema) {
+
+            var parents = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+            var all = new HashSet<string>(schema.Keys, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var kv in schema) {
+
+                var t = kv.Key;
+
+                if (!parents.ContainsKey(t)) {
+
+                    parents[t] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                }
+
+                var fks = kv.Value.fks;
+
+                if (fks == null) {
+
+                    continue;
+
+                }
+
+                foreach (var k in fks) {
+
+                    if (!is_fk(k)) {
+
+                        continue;
+
+                    }
+
+                    var p = fk_parent_table(k);
+
+                    if (!string.IsNullOrEmpty(p) && all.Contains(p) && !p.Equals(t, StringComparison.OrdinalIgnoreCase)) {
+
+                        parents[t].Add(p);
+
+                    }
+
+                }
+
+            }
+
+            var indeg = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            // kahn's algorithm
+            foreach (var t in all) {
+
+                indeg[t] = 0;
+
+            }
+
+            foreach (var t in all)
+
+                foreach (var p in parents[t]) {
+
+                    indeg[t]++;
+
+                }
+
+            var q = new Queue<string>();
+
+            foreach (var t in all) {
+
+                if (indeg[t] == 0) {
+
+                    q.Enqueue(t);
+
+                }
+
+            }
+
+            var order = new List<string>();
+
+            while (q.Count > 0) {
+
+                var n = q.Dequeue();
+
+                order.Add(n);
+
+                foreach (var m in all) {
+
+                    if (parents[m].Contains(n)) {
+
+                        indeg[m]--;
+
+                        if (indeg[m] == 0) {
+
+                            q.Enqueue(m);
+
+                        }
+                    }
+
+                }
+
+            }
+
+            if (order.Count != all.Count) {
+
+                foreach (var t in all) {
+
+                    if (!order.Contains(t)) order.Add(t);
+
+                }
+
+            }
+
+            return order;
+
         }
 
         
