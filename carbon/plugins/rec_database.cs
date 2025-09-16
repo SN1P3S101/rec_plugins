@@ -10,7 +10,7 @@ using Oxide.Core.Plugins;
 
 namespace Carbon.Plugins {
 
-    [Info("rec_database", "SN1P3S_", "0.0.1")]
+    [Info("rec_database", "SN1P3S_", "0.1.0")]
     [Description("Everything related to the database of the server.")]
     public class rec_database : CarbonPlugin {
 
