@@ -3,10 +3,11 @@
 using System;
 using System.Data;
 using System.Collections.Generic;
-using MySql.Data.MySqlClient;
 
 using Oxide.Core;
 using Oxide.Core.Plugins;
+
+using MySql.Data.MySqlClient;
 
 namespace Carbon.Plugins {
 
@@ -181,6 +182,7 @@ namespace Carbon.Plugins {
 
                 ["player"] = (new Dictionary<string, string> {
                     {"id", "INT UNSIGNED AUTO_INCREMENT PRIMARY KEY"},
+                    {"server_id", "VARCHAR(32) NOT NULL"},
                     {"steam_id", "VARCHAR(17) NOT NULL"},
                     {"username", "VARCHAR(32) NOT NULL"},
                     {"known_usernames", "TEXT"},
