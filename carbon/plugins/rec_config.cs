@@ -209,84 +209,18 @@ namespace Carbon.Plugins {
                         typeof(string)
                     )},
 
-                    {"link_website",
+                    {"debug",
                     new schema_item(
-                        "https://recaris.eu",
                         false,
-                        "Website URL",
-                        "This is the URL to your server's website. It will be used in various places, such as in chat commands or web interfaces, to provide players with a link to your website.\n\nMake sure to include the full URL, including the 'http://' or 'https://' prefix.",
-                        typeof(string)
-                    )},
-
-                    {"link_discord",
-                    new schema_item(
-                        "https://discord.gg/fDAjtATuma",
-                        false,
-                        "Discord Invite Link",
-                        "This is the invite link to your server's Discord. It will be used in various places, such as in chat commands or web interfaces, to provide players with a link to your Discord server.\n\nMake sure to use a valid invite link.",
-                        typeof(string)
-                    )},
-
-                    {"link_shop",
-                    new schema_item(
-                        "https://recaris.eu",
-                        false,
-                        "Shop URL",
-                        "This is the URL to your server's shop. It will be used in various places, such as in chat commands or web interfaces, to provide players with a link to your shop.\n\nMake sure to include the full URL, including the 'http://' or 'https://' prefix.",
-                        typeof(string)
-                    )},
-
-                    {"server_name",
-                    new schema_item(
-                        "Recaris Gaming",
                         true,
-                        "Server Name",
-                        "The name of your server. This will be used in various places, such as in chat commands or web interfaces, to identify your server.",
-                        typeof(string)
+                        "Enable debug logging",
+                        "When true, prints verbose diagnostics. Useful for troubleshooting issues.",
+                        typeof(bool)
                     )},
-
-                    {"server_tag",
-                    new schema_item(
-                        "[REC]",
-                        false,
-                        "Server Tag for chat",
-                        "This tag will be prefixed to all chat messages sent by the plugin. It should be short and easily recognizable, as it will help players identify messages from the server in the chat.\n\nExample: [REC] Welcome to the server!",
-                        typeof(string)
-                    )},
-                        
-
-                    {"style_primary_color",
-                    new schema_item(
-                        "#ff952a",
-                        true,
-                        "Primary Style Color",
-                        "The primary color used in different kinds of elements. This should be a valid hex color code (e.g., #ff952a).",
-                        typeof(string)
-                    )},
-
-                    {"style_secondary_color",
-                    new schema_item(
-                        "#72ffba",
-                        true,
-                        "Secondary Style Color",
-                        "The secondary color used in different kinds of elements. This should be a valid hex color code (e.g., #72ffba).",
-                        typeof(string)
-                    )},
-
-                    {"steam_id",
-                    new schema_item(
-                        "76561199855661809",
-                        false,
-                        "Steam ID for icon in chat",
-                        "This is the Steam ID of the account whose avatar will be used as the icon in chat messages sent by the plugin. It should be a valid Steam ID (e.g., 76561199855661809).\n\nThis is optional, but recommended to give your server a more personalized touch. Also default system messages will use this icon and your server_tag as the prefix. Example: [image] [<server_tag>] This is a system message.",
-                        typeof(string)
-                    )}
 
                 }},
 
                 {"rec_database", new Dictionary<string, object> {
-
-                    // hostname, port, database, username, password
 
                     {"hostname",
                     new schema_item(
